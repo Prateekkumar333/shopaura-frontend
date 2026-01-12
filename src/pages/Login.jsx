@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -30,14 +31,25 @@ const Login = () => {
     setLoading(false);
 
     if (result.success) {
-      navigate('/');
+      // ✅ Check if there's a redirect path saved (from cart/wishlist)
+      const redirectPath = localStorage.getItem('redirectAfterLogin');
+      
+      if (redirectPath) {
+        // Remove the saved path
+        localStorage.removeItem('redirectAfterLogin');
+        // Redirect back to the page they were on
+        navigate(redirectPath);
+      } else {
+        // Default redirect to home
+        navigate('/');
+      }
     } else {
       setError(result.message);
     }
   };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-linear-to-brrom-purple-50 via-pink-50 to-amber-50 p-4 overflow-hidden">
+    <div className="h-screen flex items-center justify-center bg-linear-to-br from-purple-50 via-pink-50 to-amber-50 p-4 overflow-hidden">
       {/* Main Container */}
       <div className="w-full max-w-3xl h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex items-center justify-center px-8 py-10">
         
