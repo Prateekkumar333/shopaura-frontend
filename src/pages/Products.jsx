@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-import API from '../utils/api';
+import API from '../services/api';
 import {
   FiGrid,
   FiList,
@@ -197,7 +197,7 @@ const Products = () => {
   };
 
   const handleProductClick = (product) => {
-    navigate(`/product/${product.slug || product._id}`);
+    navigate(`/products/${product.slug || product._id}`);
   };
 
   const getBreadcrumb = () => {

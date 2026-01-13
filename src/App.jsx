@@ -1,76 +1,84 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { NotificationProvider } from './context/NotificationContext';
+import { SearchProvider } from './context/SearchContext';
 import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Wishlist from './pages/Wishlist';
-import ProtectedRoute from './components/ProtectedRoute';
+import Categories from './pages/Categories';
+import CategoryProducts from './pages/CategoryProducts';
+import Search from './pages/Search';
+import Profile from './pages/Profile';
+import Addresses from './pages/Addresses';
+import Settings from './pages/Settings';
+import Checkout from './pages/Checkout';
+import Payment from './pages/Payment';
+import Orders from './pages/Orders';
+import OrderDetail from './pages/OrderDetail';
+import OrderTracking from './pages/OrderTracking';
+import Notifications from './pages/Notifications';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        {/* ✅ FIXED: CartProvider and WishlistProvider moved inside Router */}
-        <CartProvider>
-          <WishlistProvider>
-            <Routes>
-              {/* Routes with shared layout */}
-              <Route path="/" element={<Layout />}>
-                {/* Public Routes */}
-                <Route index element={<Home />} />
-                <Route path="login" element={<Login />} />
-                <Route path="register" element={<Register />} />
-                <Route path="products" element={<Products />} />
-                <Route path="product/:id" element={<ProductDetail />} />
-                <Route 
-                  path="wishlist" 
-                  element={
-                    <ProtectedRoute>
-                      <Wishlist />
-                    </ProtectedRoute>
-                  } 
-                />
+    <Router>
+      <AuthProvider>
+        <NotificationProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <SearchProvider>
+                <Toaster position="top-right" />
                 
-                {/* Protected Routes */}
-                <Route 
-                  path="dashboard" 
-                  element={
-                    <ProtectedRoute>
-                      <div className="min-h-screen flex items-center justify-center bg-linear-to-brrom-slate-50 to-white">
-                        <div className="text-center p-12 bg-white rounded-3xl shadow-2xl">
-                          <div className="text-8xl mb-6">🚀</div>
-                          <h1 className="text-5xl font-black text-gray-900 mb-4">
-                            Dashboard <span className="bg-clip-text text-transparent bg-linear-to-r from-indigo-600 to-purple-600">Coming Soon</span>
-                          </h1>
-                          <p className="text-gray-600 text-xl mb-8">
-                            This feature is under development
-                          </p>
-                          <button
-                            onClick={() => window.location.href = '/'}
-                            className="px-8 py-4 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-                          >
-                            Back to Home
-                          </button>
-                        </div>
-                      </div>
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                {/* Catch all - redirect to home */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Route>
-            </Routes>
-          </WishlistProvider>
-        </CartProvider>
-      </Router>
-    </AuthProvider>
+                <Routes>
+                  <Route path="/" element={<Layout />}>
+                    {/* Public Routes */}
+                    <Route index element={<Home />} />
+                    <Route path="login" element={<Login />} />
+                    <Route path="register" element={<Register />} />
+                    <Route path="products" element={<Products />} />
+                    <Route path="products/:id" element={<ProductDetail />} />
+                    
+                    {/* Categories */}
+                    <Route path="categories" element={<Categories />} />
+                    <Route path="category/:slug" element={<CategoryProducts />} />
+                    
+                    {/* Search */}
+                    <Route path="search" element={<Search />} />
+                    
+                    {/* Protected Routes */}
+                    <Route element={<ProtectedRoute />}>
+                      <Route path="wishlist" element={<Wishlist />} />
+                      <Route path="profile" element={<Profile />} />
+                      <Route path="addresses" element={<Addresses />} />
+                      <Route path="settings" element={<Settings />} />
+                      <Route path="checkout" element={<Checkout />} />
+                      <Route path="payment" element={<Payment />} />
+                      <Route path="orders" element={<Orders />} />
+                      <Route path="orders/:orderId" element={<OrderDetail />} />
+                      <Route path="orders/:orderId/track" element={<OrderTracking />} />
+                      <Route path="notifications" element={<Notifications />} />
+                    </Route>
+                    
+                    {/* Catch all */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Route>
+                </Routes>
+              </SearchProvider>
+            </WishlistProvider>
+          </CartProvider>
+        </NotificationProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-import API from '../utils/api';
+import API from '../services/api';
 import {
   FiShoppingBag,
   FiTrendingUp,
@@ -111,7 +111,7 @@ const Home = () => {
   };
 
   const handleProductClick = (product) => {
-    navigate(`/product/${product.slug || product._id}`);
+    navigate(`/products/${product.slug || product._id}`);
   };
 
   // Handle Add to Cart

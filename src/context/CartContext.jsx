@@ -3,7 +3,7 @@ import { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { useAuth } from './AuthContext';
-import API from '../utils/api';
+import API from '../services/api';
 
 const CartContext = createContext();
 
@@ -27,12 +27,10 @@ export const CartProvider = ({ children }) => {
     if (isAuthenticated && !authLoading) {
       fetchCart();
     } else if (!isAuthenticated && !authLoading) {
-      // Clear cart when user logs out
       setCartItems([]);
     }
   }, [isAuthenticated, authLoading]);
 
-  // Fetch cart from database
   const fetchCart = async () => {
     try {
       setLoading(true);
@@ -49,12 +47,9 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Add item to cart - REQUIRES LOGIN
   const addToCart = async (product) => {
-    // Check if user is authenticated
     if (!isAuthenticated) {
       showNotification('Please login to add items to cart', 'error');
-      // Save the current page to redirect back after login
       const currentPath = window.location.pathname;
       localStorage.setItem('redirectAfterLogin', currentPath);
       navigate('/login');
@@ -81,7 +76,6 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Remove item from cart
   const removeFromCart = async (productId) => {
     if (!isAuthenticated) {
       showNotification('Please login first', 'error');
@@ -104,7 +98,6 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Update quantity
   const updateQuantity = async (productId, quantity) => {
     if (!isAuthenticated) return;
 
@@ -132,7 +125,6 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Increment quantity
   const incrementQuantity = async (productId) => {
     const item = cartItems.find(item => item.product._id === productId);
     if (item) {
@@ -140,7 +132,6 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Decrement quantity
   const decrementQuantity = async (productId) => {
     const item = cartItems.find(item => item.product._id === productId);
     if (item && item.quantity > 1) {
@@ -150,7 +141,6 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Clear entire cart
   const clearCart = async () => {
     if (!isAuthenticated) return;
 
@@ -170,7 +160,6 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Get cart total price
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => {
       const price = item.finalPrice || item.price || 0;
@@ -178,23 +167,19 @@ export const CartProvider = ({ children }) => {
     }, 0);
   };
 
-  // Get cart item count
   const getCartCount = () => {
     return cartItems.reduce((count, item) => count + item.quantity, 0);
   };
 
-  // Check if product is in cart
   const isInCart = (productId) => {
     return cartItems.some(item => item.product._id === productId || item.product === productId);
   };
 
-  // Get item quantity
   const getItemQuantity = (productId) => {
     const item = cartItems.find(item => item.product._id === productId || item.product === productId);
     return item ? item.quantity : 0;
   };
 
-  // Toggle cart sidebar
   const toggleCart = () => {
     if (!isAuthenticated) {
       showNotification('Please login to view cart', 'error');
@@ -204,7 +189,6 @@ export const CartProvider = ({ children }) => {
     setIsCartOpen(!isCartOpen);
   };
 
-  // Notification helper
   const showNotification = (message, type = 'info') => {
     const notification = document.createElement('div');
     notification.className = `fixed top-5 right-5 px-6 py-4 rounded-xl shadow-2xl text-white z-50 transition-all duration-300 transform translate-x-full ${
@@ -225,6 +209,11 @@ export const CartProvider = ({ children }) => {
   };
 
   const value = {
+    // ✅ ADD THESE TWO LINES
+    cart: cartItems,              // Alias for Checkout page
+    cartTotal: getCartTotal(),    // Pre-calculated total
+    
+    // Keep existing exports
     cartItems,
     isCartOpen,
     loading,

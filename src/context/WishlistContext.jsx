@@ -8,12 +8,12 @@ import {
 } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import API from '../utils/api';
+import API from '../services/api';
 import PropTypes from 'prop-types';
 
 const WishlistContext = createContext();
 
-// ✅ FIXED: Export useWishlist hook
+// ✅ Export useWishlist hook
 export const useWishlist = () => {
   const context = useContext(WishlistContext);
   if (!context) {
@@ -53,8 +53,14 @@ export const WishlistProvider = ({ children }) => {
     }
   }, [isAuthenticated, authLoading, syncWishlistFromAPI]);
 
-  // Toggle wishlist - REQUIRES LOGIN
+  // ⭐ UPDATED: Toggle wishlist with loading protection and 429 error handling
   const toggleWishlist = async (product) => {
+    // ⭐ NEW: Prevent duplicate requests
+    if (loading) {
+      console.log('Request already in progress');
+      return;
+    }
+
     // Check authentication
     if (!isAuthenticated) {
       showNotification('Please login to manage wishlist', 'error');
@@ -86,7 +92,14 @@ export const WishlistProvider = ({ children }) => {
       
     } catch (error) {
       console.error('Wishlist toggle error:', error);
-      showNotification('Failed to update wishlist', 'error');
+      
+      // ⭐ NEW: Handle 429 specifically
+      if (error.response?.status === 429) {
+        showNotification('Too many requests. Please wait a moment.', 'error');
+      } else {
+        showNotification('Failed to update wishlist', 'error');
+      }
+      
       throw error;
     } finally {
       setLoading(false);

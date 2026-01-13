@@ -5,71 +5,58 @@ import Cart from './Cart';
 
 function Layout() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
-      {/* Main content area where child routes render */}
-      <main className="grow">
+      <Cart />
+      <main className="pt-16">
         <Outlet />
       </main>
       
       {/* Footer */}
-      <footer className="bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            {/* Footer content */}
-            <div className="space-y-4">
-              <h3 className="text-4xl font-black">
-                <span className="bg-clip-text text-transparent bg-linear-to-r from-indigo-400 to-purple-400">shop</span>
-                <span className="bg-clip-text text-transparent bg-linear-to-r from-purple-400 to-pink-400">aura</span>
+      <footer className="bg-gray-900 text-white mt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="text-2xl font-black mb-4 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                ShopAura
               </h3>
-              <p className="text-gray-400 leading-relaxed">
-                Your trusted destination for quality products at unbeatable prices. Shop with confidence!
+              <p className="text-gray-400">
+                Your one-stop destination for all your shopping needs.
               </p>
             </div>
             
-            {/* Quick Links */}
             <div>
-              <h4 className="font-black text-xl mb-6 text-white">Quick Links</h4>
-              <ul className="space-y-3 text-gray-400">
-                <li><a href="/products" className="hover:text-white hover:translate-x-2 inline-block transition-all duration-300 font-medium">All Products</a></li>
-                <li><a href="/products" className="hover:text-white hover:translate-x-2 inline-block transition-all duration-300 font-medium">Categories</a></li>
-                <li><a href="#" className="hover:text-white hover:translate-x-2 inline-block transition-all duration-300 font-medium">About Us</a></li>
-                <li><a href="#" className="hover:text-white hover:translate-x-2 inline-block transition-all duration-300 font-medium">Contact</a></li>
+              <h4 className="font-bold mb-4">Quick Links</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
+                <li><a href="/products" className="hover:text-white transition-colors">Products</a></li>
+                <li><a href="/categories" className="hover:text-white transition-colors">Categories</a></li>
               </ul>
             </div>
             
-            {/* Customer Service */}
             <div>
-              <h4 className="font-black text-xl mb-6 text-white">Customer Service</h4>
-              <ul className="space-y-3 text-gray-400">
-                <li><a href="#" className="hover:text-white hover:translate-x-2 inline-block transition-all duration-300 font-medium">Help Center</a></li>
-                <li><a href="#" className="hover:text-white hover:translate-x-2 inline-block transition-all duration-300 font-medium">Track Order</a></li>
-                <li><a href="#" className="hover:text-white hover:translate-x-2 inline-block transition-all duration-300 font-medium">Returns</a></li>
-                <li><a href="#" className="hover:text-white hover:translate-x-2 inline-block transition-all duration-300 font-medium">Shipping Info</a></li>
+              <h4 className="font-bold mb-4">Customer Service</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="/profile" className="hover:text-white transition-colors">My Account</a></li>
+                <li><a href="/orders" className="hover:text-white transition-colors">Orders</a></li>
+                <li><a href="/wishlist" className="hover:text-white transition-colors">Wishlist</a></li>
               </ul>
             </div>
             
-            {/* Legal */}
             <div>
-              <h4 className="font-black text-xl mb-6 text-white">Legal</h4>
-              <ul className="space-y-3 text-gray-400">
-                <li><a href="#" className="hover:text-white hover:translate-x-2 inline-block transition-all duration-300 font-medium">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white hover:translate-x-2 inline-block transition-all duration-300 font-medium">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-white hover:translate-x-2 inline-block transition-all duration-300 font-medium">Cookie Policy</a></li>
-                <li><a href="#" className="hover:text-white hover:translate-x-2 inline-block transition-all duration-300 font-medium">Refund Policy</a></li>
+              <h4 className="font-bold mb-4">Contact</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>Email: support@shopaura.com</li>
+                <li>Phone: +91 123 456 7890</li>
               </ul>
             </div>
           </div>
           
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2026 ShopAura. All rights reserved. Made with ❤️ in India</p>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; {new Date().getFullYear()} ShopAura. All rights reserved.</p>
           </div>
         </div>
       </footer>
-      
-      {/* Global Cart Sidebar */}
-      <Cart />
     </div>
   );
 }

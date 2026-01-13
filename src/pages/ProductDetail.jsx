@@ -4,7 +4,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
-import API from "../utils/api";
+import API from "../services/api";
 import {
   FiStar,
   FiHeart,
@@ -25,7 +25,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { addToCart, isInCart, getItemQuantity, updateQuantity } = useCart();
-  const { toggleWishlist, isInWishlist } = useWishlist();
+  const { toggleWishlist, isInWishlist, loading: wishlistLoading } = useWishlist();
 
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -33,7 +33,7 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
-  const [isHeartedFromAPI, setIsHeartedFromAPI] = useState(false); // ✅ NEW
+  const [isHeartedFromAPI, setIsHeartedFromAPI] = useState(false);
   const isCurrentlyHearted = isHeartedFromAPI || isInWishlist(product?._id);
 
   // Review Modal State
@@ -58,12 +58,10 @@ const ProductDetail = () => {
     }
   }, [product, isInCart, getItemQuantity]);
 
-  // REPLACE ENTIRE fetchProduct function (around line 47-62)
   const fetchProduct = async () => {
     try {
       setLoading(true);
 
-      // ✅ NEW: Use correct API based on auth status
       const endpoint = isAuthenticated
         ? `/products/${id}`
         : `/products/${id}/public`;
@@ -72,7 +70,6 @@ const ProductDetail = () => {
       const productData = res.data.product;
       setProduct(productData);
 
-      // ✅ NEW: Handle ishearted from API response
       if (productData.ishearted !== undefined) {
         setIsHeartedFromAPI(productData.ishearted);
       } else {
@@ -80,7 +77,6 @@ const ProductDetail = () => {
       }
     } catch (error) {
       console.error("Error fetching product:", error);
-      // Fallback to public API
       try {
         const fallbackRes = await API.get(`/products/${id}/public`);
         setProduct(fallbackRes.data.product);
@@ -110,29 +106,23 @@ const ProductDetail = () => {
     }
   };
 
-  // Handle Add to Cart
   const handleAddToCart = () => {
     if (isInCart(product._id)) {
-      // Update quantity if already in cart
       updateQuantity(product._id, quantity);
     } else {
-      // Add new item to cart
       addToCart({ ...product, quantity });
     }
   };
 
-  // REPLACE handleWishlistToggle function (around line 90)
+  // ⭐ FIXED: Remove duplicate fetchProduct call
   const handleWishlistToggle = async () => {
     try {
       await toggleWishlist(product);
-
-      // ✅ NEW: Update API state immediately
       setIsHeartedFromAPI((prev) => !prev);
-
-      // Refresh product data
-      await fetchProduct();
     } catch (error) {
       console.error("Wishlist toggle error:", error);
+      // Revert optimistic update on error
+      setIsHeartedFromAPI((prev) => !prev);
     }
   };
 
@@ -186,7 +176,6 @@ const ProductDetail = () => {
 
       alert("Review submitted successfully!");
 
-      // Reset form and close modal
       setReviewForm({
         rating: 5,
         title: "",
@@ -194,9 +183,8 @@ const ProductDetail = () => {
       });
       setShowReviewModal(false);
 
-      // Refresh reviews
       fetchReviews();
-      fetchProduct(); // Refresh product to update rating
+      fetchProduct();
     } catch (error) {
       console.error("Error submitting review:", error);
       alert(
@@ -210,7 +198,7 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-linear-to-b from-slate-50 to-white">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="animate-pulse">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -230,7 +218,7 @@ const ProductDetail = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-linear-to-b from-slate-50 to-white">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 py-12 text-center">
           <div className="text-8xl mb-6">😕</div>
           <h2 className="text-3xl font-black text-gray-900 mb-4">
@@ -241,7 +229,7 @@ const ProductDetail = () => {
           </p>
           <button
             onClick={() => navigate("/products")}
-            className="px-8 py-4 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+            className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
           >
             Back to Products
           </button>
@@ -256,7 +244,7 @@ const ProductDetail = () => {
   ].filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-linear-to-brom-slate-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Breadcrumb */}
       <div className="bg-white shadow-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -300,7 +288,7 @@ const ProductDetail = () => {
           <div className="space-y-4">
             {/* Main Image */}
             <div className="relative bg-white rounded-3xl shadow-xl overflow-hidden group">
-              <div className="aspect-square bg-linear-to-br from-gray-100 to-gray-200">
+              <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200">
                 <img
                   src={
                     images[selectedImage] ||
@@ -315,36 +303,36 @@ const ProductDetail = () => {
               </div>
               {/* Discount Badge */}
               {product.discount > 0 && (
-                <div className="absolute top-4 left-4 bg-linear-to-r from-red-500 to-pink-600 text-white px-4 py-2 rounded-full font-black shadow-lg animate-bounce">
+                <div className="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-pink-600 text-white px-4 py-2 rounded-full font-black shadow-lg animate-bounce">
                   {product.discount}% OFF
                 </div>
               )}
 
+              {/* ⭐ FIXED: Wishlist Heart Button */}
               <button
-  type="button"  // ✅ ADD THIS - Prevents form submission
-  onClick={(e) => {
-    e.preventDefault();     // ✅ Prevents default action
-    e.stopPropagation();   // ✅ Stops event bubbling
-    handleWishlistToggle();
-  }}
-  disabled={product.stock === 0}
-  className={`absolute top-4 right-4 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 ${
-    isCurrentlyHearted
-      ? "bg-red-500 text-white"
-      : "bg-white hover:bg-red-50 hover:text-red-500"
-  } disabled:opacity-50 disabled:cursor-not-allowed`}
-  title={
-    isCurrentlyHearted
-      ? "Remove from wishlist"
-      : "Add to wishlist"
-  }
->
-  <FiHeart
-    className={isCurrentlyHearted ? "fill-current" : ""}
-    size={24}
-  />
-</button>
-
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleWishlistToggle();
+                }}
+                disabled={product.stock === 0 || wishlistLoading}
+                className={`absolute top-4 right-4 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 ${
+                  isCurrentlyHearted
+                    ? "bg-red-500 text-white"
+                    : "bg-white hover:bg-red-50 hover:text-red-500"
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={
+                  isCurrentlyHearted
+                    ? "Remove from wishlist"
+                    : "Add to wishlist"
+                }
+              >
+                <FiHeart
+                  className={isCurrentlyHearted ? "fill-current" : ""}
+                  size={24}
+                />
+              </button>
             </div>
 
             {/* Thumbnail Images */}
@@ -382,7 +370,7 @@ const ProductDetail = () => {
               {/* Brand */}
               {product.brand && (
                 <div className="mb-4">
-                  <span className="inline-block bg-linear-to-r from-indigo-100 to-purple-100 text-indigo-700 px-4 py-2 rounded-full text-sm font-bold">
+                  <span className="inline-block bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 px-4 py-2 rounded-full text-sm font-bold">
                     Brand: {product.brand}
                   </span>
                 </div>
@@ -404,7 +392,7 @@ const ProductDetail = () => {
               {/* Price */}
               <div className="mb-6 pb-6 border-b border-gray-100">
                 <div className="flex items-baseline gap-4 mb-2">
-                  <span className="text-4xl font-black bg-clip-text text-transparent bg-linear-to-r from-indigo-600 to-purple-600">
+                  <span className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
                     ₹{product.finalPrice || product.price}
                   </span>
                   {product.discount > 0 && (
@@ -412,7 +400,7 @@ const ProductDetail = () => {
                       <span className="text-2xl text-gray-400 line-through font-semibold">
                         ₹{product.price}
                       </span>
-                      <span className="bg-linear-to-r from-green-500 to-emerald-600 text-white px-4 py-1.5 rounded-full text-sm font-black shadow-md">
+                      <span className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-1.5 rounded-full text-sm font-black shadow-md">
                         Save ₹
                         {product.price - (product.finalPrice || product.price)}
                       </span>
@@ -427,12 +415,11 @@ const ProductDetail = () => {
               {/* Stock Status */}
               <div className="mb-6">
                 {product.stock > 0 ? (
-                  <div className="flex items-center gap-3 bg-linear-to-r from-green-50 to-emerald-50 border-2 border-green-200 px-6 py-4 rounded-xl">
+                  <div className="flex items-center gap-3 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 px-6 py-4 rounded-xl">
                     <div className="bg-green-500 p-2 rounded-full">
                       <FiCheck className="text-white" size={20} />
                     </div>
                     <div>
-                      {/* Stock Info */}
                       {product.stock > 0 && product.stock <= 10 ? (
                         <div className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold inline-block">
                           ⚠️ Low Stock
@@ -445,7 +432,7 @@ const ProductDetail = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 bg-linear-to-r from-red-50 to-pink-50 border-2 border-red-200 px-6 py-4 rounded-xl">
+                  <div className="flex items-center gap-3 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 px-6 py-4 rounded-xl">
                     <FiAlertCircle className="text-red-600" size={24} />
                     <div>
                       <p className="font-bold text-red-700 text-lg">
@@ -468,7 +455,7 @@ const ProductDetail = () => {
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => handleQuantityChange("decrement")}
-                      className="w-12 h-12 bg-linear-to-r from-gray-100 to-gray-200 rounded-xl hover:from-gray-200 hover:to-gray-300 font-black text-xl transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+                      className="w-12 h-12 bg-gradient-to-r from-gray-100 to-gray-200 rounded-xl hover:from-gray-200 hover:to-gray-300 font-black text-xl transition-all shadow-md hover:shadow-lg transform hover:scale-105"
                     >
                       -
                     </button>
@@ -478,7 +465,7 @@ const ProductDetail = () => {
                     <button
                       onClick={() => handleQuantityChange("increment")}
                       disabled={quantity >= product.stock}
-                      className="w-12 h-12 bg-linear-to-r from-gray-100 to-gray-200 rounded-xl hover:from-gray-200 hover:to-gray-300 font-black text-xl transition-all shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-12 h-12 bg-gradient-to-r from-gray-100 to-gray-200 rounded-xl hover:from-gray-200 hover:to-gray-300 font-black text-xl transition-all shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       +
                     </button>
@@ -496,20 +483,21 @@ const ProductDetail = () => {
                   disabled={product.stock === 0}
                   className={`w-full py-5 rounded-xl font-black text-lg transition-all shadow-xl hover:shadow-2xl flex items-center justify-center gap-3 transform hover:scale-105 ${
                     isInCart(product._id)
-                      ? "bg-linear-to-r from-green-500 to-emerald-600 text-white"
-                      : "bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700"
+                      ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white"
+                      : "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700"
                   } disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
                 >
                   <FiShoppingCart size={24} />
                   {isInCart(product._id) ? "✓ Update Cart" : "Add to Cart"}
                 </button>
 
+                {/* ⭐ FIXED: Wishlist Button */}
                 <button
                   onClick={handleWishlistToggle}
-                  disabled={product.stock === 0}
+                  disabled={product.stock === 0 || wishlistLoading}
                   className={`w-full py-5 rounded-xl font-black text-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 transform hover:scale-105 ${
                     isCurrentlyHearted
-                      ? "bg-linear-to-r from-red-500 to-pink-600 text-white"
+                      ? "bg-gradient-to-r from-red-500 to-pink-600 text-white"
                       : "bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50"
                   } disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
                 >
@@ -517,14 +505,18 @@ const ProductDetail = () => {
                     className={isCurrentlyHearted ? "fill-current" : ""}
                     size={24}
                   />
-                  {isCurrentlyHearted ? "✓ In Wishlist" : "Add to Wishlist"}
+                  {wishlistLoading 
+                    ? "Processing..." 
+                    : isCurrentlyHearted 
+                    ? "✓ In Wishlist" 
+                    : "Add to Wishlist"}
                 </button>
               </div>
 
               {/* Features */}
-              <div className="space-y-4 bg-linear-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border-2 border-indigo-100">
+              <div className="space-y-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border-2 border-indigo-100">
                 <div className="flex items-center gap-4 text-gray-700">
-                  <div className="bg-linear-to-r from-indigo-500 to-purple-600 p-3 rounded-xl">
+                  <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-3 rounded-xl">
                     <FiTruck className="text-white" size={24} />
                   </div>
                   <div>
@@ -535,7 +527,7 @@ const ProductDetail = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-4 text-gray-700">
-                  <div className="bg-linear-to-r from-green-500 to-emerald-600 p-3 rounded-xl">
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-3 rounded-xl">
                     <FiRotateCcw className="text-white" size={24} />
                   </div>
                   <div>
@@ -546,7 +538,7 @@ const ProductDetail = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-4 text-gray-700">
-                  <div className="bg-linear-to-r from-yellow-500 to-orange-600 p-3 rounded-xl">
+                  <div className="bg-gradient-to-r from-yellow-500 to-orange-600 p-3 rounded-xl">
                     <FiShield className="text-white" size={24} />
                   </div>
                   <div>
@@ -579,7 +571,7 @@ const ProductDetail = () => {
         {/* Tabs Section */}
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
           {/* Tab Headers */}
-          <div className="border-b border-gray-200 bg-linear-to-r from-gray-50 to-white">
+          <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
             <div className="flex">
               <button
                 onClick={() => setActiveTab("description")}
@@ -695,7 +687,7 @@ const ProductDetail = () => {
                   {isAuthenticated && (
                     <button
                       onClick={() => setShowReviewModal(true)}
-                      className="px-6 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 font-bold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                      className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 font-bold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                     >
                       Write a Review
                     </button>
@@ -712,7 +704,7 @@ const ProductDetail = () => {
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             <div className="flex items-center gap-3 mb-2">
-                              <div className="w-12 h-12 bg-linear-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-black text-lg">
+                              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-black text-lg">
                                 {review.user?.name?.[0]?.toUpperCase() || "A"}
                               </div>
                               <div>
@@ -761,7 +753,7 @@ const ProductDetail = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-16 bg-linear-to-br from-gray-50 to-gray-100 rounded-2xl">
+                  <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl">
                     <div className="text-7xl mb-4">⭐</div>
                     <p className="text-gray-600 text-lg mb-6">
                       No reviews yet. Be the first to review this product!
@@ -769,7 +761,7 @@ const ProductDetail = () => {
                     {isAuthenticated && (
                       <button
                         onClick={() => setShowReviewModal(true)}
-                        className="px-8 py-4 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                        className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                       >
                         Write First Review
                       </button>
@@ -787,7 +779,7 @@ const ProductDetail = () => {
         <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform animate-slide-up">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-8 border-b border-gray-200 bg-linear-to-r from-indigo-50 to-purple-50">
+            <div className="flex items-center justify-between p-8 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
               <div>
                 <h2 className="text-3xl font-black text-gray-900">
                   Write a Review
@@ -807,7 +799,7 @@ const ProductDetail = () => {
             {/* Modal Body */}
             <form onSubmit={handleReviewSubmit} className="p-8 space-y-6">
               {/* Product Info */}
-              <div className="flex items-center gap-4 p-6 bg-linear-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-gray-200">
+              <div className="flex items-center gap-4 p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-gray-200">
                 <img
                   src={
                     product.thumbnail?.url ||
@@ -831,7 +823,7 @@ const ProductDetail = () => {
                 <label className="block text-sm font-black text-gray-900 mb-3 uppercase tracking-wide">
                   Your Rating *
                 </label>
-                <div className="flex items-center gap-3 bg-linear-to-r from-yellow-50 to-orange-50 p-4 rounded-xl border-2 border-yellow-200">
+                <div className="flex items-center gap-3 bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl border-2 border-yellow-200">
                   {renderClickableStars(reviewForm.rating, (rating) =>
                     setReviewForm((prev) => ({ ...prev, rating }))
                   )}
@@ -898,7 +890,7 @@ const ProductDetail = () => {
                 <button
                   type="submit"
                   disabled={submittingReview || !reviewForm.comment.trim()}
-                  className="flex-1 px-8 py-4 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 text-lg"
+                  className="flex-1 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 text-lg"
                 >
                   {submittingReview ? "Submitting..." : "Submit Review"}
                 </button>
